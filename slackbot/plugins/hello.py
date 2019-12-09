@@ -107,6 +107,7 @@ def hello_send(message):
 def hello_decorators(message):
     message.send('hello!')
 
+
 @listen_to('hey!')
 def hey(message):
     message.react('eggplant')
@@ -120,6 +121,7 @@ def hello_unicode_message(message):
 @listen_to('start a thread')
 def start_thread(message):
     message.reply('I started a thread', in_thread=True)
+
 
 @respond_to('say hi to me')
 def direct_hello(message):
