@@ -8,13 +8,10 @@ import time
 from ssl import SSLError
 
 import slacker
-from six import iteritems
 
 from websocket import (
     create_connection, WebSocketException, WebSocketConnectionClosedException
 )
-
-from slackbot.utils import to_utf8
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +124,7 @@ class SlackClient(object):
         self.send_to_websocket(message_json)
 
     def upload_file(self, channel, fname, fpath, comment):
-        fname = fname or to_utf8(os.path.basename(fpath))
+        fname = fname or os.path.basename(fpath)
         self.webapi.files.upload(fpath,
                                  channels=channel,
                                  filename=fname,
@@ -159,7 +156,7 @@ class SlackClient(object):
         return self.webapi.im.open(user_id).body["channel"]["id"]
 
     def find_channel_by_name(self, channel_name):
-        for channel_id, channel in iteritems(self.channels):
+        for channel_id, channel in self.channels.items():
             try:
                 name = channel['name']
             except KeyError:
@@ -171,7 +168,7 @@ class SlackClient(object):
         return self.users.get(user_id)
 
     def find_user_by_name(self, username):
-        for userid, user in iteritems(self.users):
+        for userid, user in self.users:
             if user['name'] == username:
                 return userid
 
@@ -199,15 +196,15 @@ class Channel(object):
     def upload_file(self, fname, fpath, initial_comment=''):
         self._client.upload_file(
             self._body['id'],
-            to_utf8(fname),
-            to_utf8(fpath),
-            to_utf8(initial_comment)
+            fname,
+            fpath,
+            initial_comment
         )
 
     def upload_content(self, fname, content, initial_comment=''):
         self._client.upload_content(
             self._body['id'],
-            to_utf8(fname),
-            to_utf8(content),
-            to_utf8(initial_comment)
+            fname,
+            content,
+            initial_comment
         )

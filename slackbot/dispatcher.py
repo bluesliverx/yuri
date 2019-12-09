@@ -7,7 +7,6 @@ import time
 import traceback
 from functools import wraps
 
-import six
 from slackbot.manager import PluginsManager
 from slackbot.utils import WorkerPool
 from slackbot import settings
@@ -162,7 +161,7 @@ class MessageDispatcher(object):
             default_reply += [
                 u'    • `{0}` {1}'.format(p.pattern, v.__doc__ or "")
                 for p, v in
-                six.iteritems(self._plugins.commands['respond_to'])]
+                self._plugins.commands['respond_to'].items()]
             # pylint: disable=redefined-variable-type
             default_reply = u'\n'.join(default_reply)
 
@@ -178,7 +177,7 @@ def unicode_compact(func):
 
     @wraps(func)
     def wrapped(self, text, *a, **kw):
-        if not isinstance(text, six.text_type):
+        if not isinstance(text, str):
             text = text.decode('utf-8')
         return func(self, text, *a, **kw)
 
@@ -317,5 +316,5 @@ class Message(object):
     def docs_reply(self):
         reply = [u'    • `{0}` {1}'.format(v.__name__, v.__doc__ or '')
                  for _, v in
-                 six.iteritems(self._plugins.commands['respond_to'])]
+                 self._plugins.commands['respond_to'].items()]
         return u'\n'.join(reply)

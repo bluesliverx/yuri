@@ -1,3 +1,13 @@
-This version of slacker was copied from the fork for this PR: https://github.com/os/slacker/pull/152
+# Slacker Blocks Fork
 
-It adds blocks support to slacker, and therefore is used over slacker on PyPi.
+This is cloned from https://github.com/symroe/slacker, 
+which is a forked version with blocks support for the slack API.
+
+This also needs a patch to the `__init__.Chat.post_message` method:
+
+```
+# Ensure blocks are json encoded**
+if blocks:
+    if isinstance(blocks, list):
+        blocks = json.dumps(blocks)
+```

@@ -496,6 +496,11 @@ class Chat(BaseAPI):
             if isinstance(attachments, list):
                 attachments = json.dumps(attachments)
 
+        # Ensure blocks are json encoded
+        if blocks:
+            if isinstance(blocks, list):
+                blocks = json.dumps(blocks)
+
         return self.post('chat.postMessage',
                          data={
                              'channel': channel,
