@@ -115,12 +115,13 @@ class SlackClient(object):
                 data.append(json.loads(d))
         return data
 
-    def rtm_send_message(self, channel, message, attachments=None, thread_ts=None):
+    def rtm_send_message(self, channel, message, attachments=None, blocks=None, thread_ts=None):
         message_json = {
             'type': 'message',
             'channel': channel,
             'text': message,
             'attachments': attachments,
+            'blocks': blocks,
             'thread_ts': thread_ts,
             }
         self.send_to_websocket(message_json)
@@ -139,7 +140,7 @@ class SlackClient(object):
                                  filename=fname,
                                  initial_comment=comment)
 
-    def send_message(self, channel, message, attachments=None, as_user=True, thread_ts=None):
+    def send_message(self, channel, message, attachments=None, blocks=None, as_user=True, thread_ts=None):
         self.webapi.chat.post_message(
                 channel,
                 message,
@@ -147,6 +148,7 @@ class SlackClient(object):
                 icon_url=self.bot_icon,
                 icon_emoji=self.bot_emoji,
                 attachments=attachments,
+                blocks=blocks,
                 as_user=as_user,
                 thread_ts=thread_ts)
 

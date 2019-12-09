@@ -211,7 +211,7 @@ class Message(object):
             return text
 
     @unicode_compact
-    def reply_webapi(self, text, attachments=None, as_user=True, in_thread=None):
+    def reply_webapi(self, text, attachments=None, blocks=None, as_user=True, in_thread=None):
         """
             Send a reply to the sender using Web API
 
@@ -224,13 +224,13 @@ class Message(object):
             in_thread = 'thread_ts' in self.body
 
         if in_thread:
-            self.send_webapi(text, attachments=attachments, as_user=as_user, thread_ts=self.thread_ts)
+            self.send_webapi(text, attachments=attachments, blocks=blocks, as_user=as_user, thread_ts=self.thread_ts)
         else:
             text = self.gen_reply(text)
-            self.send_webapi(text, attachments=attachments, as_user=as_user)
+            self.send_webapi(text, attachments=attachments, blocks=blocks, as_user=as_user)
 
     @unicode_compact
-    def send_webapi(self, text, attachments=None, as_user=True, thread_ts=None):
+    def send_webapi(self, text, attachments=None, blocks=None, as_user=True, thread_ts=None):
         """
             Send a reply using Web API
 
@@ -241,6 +241,7 @@ class Message(object):
             self._body['channel'],
             text,
             attachments=attachments,
+            blocks=blocks,
             as_user=as_user,
             thread_ts=thread_ts)
 
