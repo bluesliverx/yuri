@@ -7,6 +7,7 @@ import time
 import traceback
 from functools import wraps
 
+from slackbot.slackclient import SlackClient
 from slackbot.manager import PluginsManager
 from slackbot.utils import WorkerPool
 from slackbot import settings
@@ -291,6 +292,10 @@ class Message(object):
             emojiname=emojiname,
             channel=self._body['channel'],
             timestamp=self._body['ts'])
+
+    @property
+    def client(self) -> SlackClient:
+        return self._client
 
     @property
     def channel(self):

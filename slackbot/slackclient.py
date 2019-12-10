@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import
 import os
 import json
 import logging
 import time
+from typing import Optional
 from ssl import SSLError
 
 import slacker
@@ -167,10 +167,11 @@ class SlackClient(object):
     def get_user(self, user_id):
         return self.users.get(user_id)
 
-    def find_user_by_name(self, username):
+    def find_user_by_name(self, username) -> Optional[str]:
         for userid, user in self.users:
             if user['name'] == username:
                 return userid
+        return None
 
     def react_to_message(self, emojiname, channel, timestamp):
         self.webapi.reactions.add(

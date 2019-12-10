@@ -41,6 +41,21 @@ effect.
 '''Specify a different reply when the bot is messaged with no matching cmd'''
 DEFAULT_REPLY = None
 
+
+'''The prefix to look for to identify any builds'''
+JENKINS_URL = 'http://jenkins/'
+
+
+'''
+Pager duty configuration, these are optional but both must be specified in
+order to enable pager duty integration.
+'''
+PAGERDUTY_TOKEN = None
+PAGERDUTY_SCHEDULE_ID = None
+PAGERDUTY_USERNAME_EMAIL_DOMAIN = None
+PAGERDUTY_DATE_FORMAT = "%Y-%m-%d %H:%M:%S %Z"
+
+
 for key in os.environ:
     if key[:9] == 'SLACKBOT_':
         name = key[9:]
