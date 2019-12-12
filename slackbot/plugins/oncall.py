@@ -5,7 +5,7 @@ from typing import Optional
 from pygerduty.v2 import ContactMethod, User
 from slackbot.bot import listen_to
 from slackbot.dispatcher import Message
-from slackbot import pagerduty
+from slackbot.integrations import pagerduty
 
 
 LOGGER = logging.getLogger(__name__)
