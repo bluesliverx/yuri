@@ -1,5 +1,4 @@
 
-import os
 import random
 import spacy
 from pathlib import Path
