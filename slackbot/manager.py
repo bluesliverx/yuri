@@ -17,7 +17,9 @@ class PluginsManager(object):
     commands = {
         'respond_to': {},
         'listen_to': {},
-        'default_reply': {}
+        'default_reply': {},
+        'nlp_label_respond_to': {},
+        'nlp_label_listen_to': {},
     }
 
     def init_plugins(self):
@@ -47,7 +49,7 @@ class PluginsManager(object):
                 import_module(module)
             except Exception:
                 # TODO Better exception handling
-                logger.exception('Failed to import %s', module)
+                logger.exception(f'Failed to import {module}')
 
     def get_plugins(self, category, text):
         has_matching_plugin = False

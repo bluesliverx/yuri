@@ -4,6 +4,7 @@ import re
 import time
 import _thread
 from slackbot import settings
+from slackbot.integrations import nlp
 from slackbot.manager import PluginsManager
 from slackbot.slackclient import SlackClient
 from slackbot.dispatcher import MessageDispatcher
@@ -43,23 +44,43 @@ class Bot(object):
             self._client.ping()
 
 
-def respond_to(matchstr, flags=0):
+def respond_to(match_str, flags=0):
     def wrapper(func):
-        PluginsManager.commands['respond_to'][
-            re.compile(matchstr, flags)] = func
-        logger.info('registered respond_to plugin "%s" to "%s"', func.__name__,
-                    matchstr)
+        PluginsManager.commands['respond_to'][re.compile(match_str, flags)] = func
+        logger.info(f'registered respond_to plugin "{func.__name__}" to "{match_str}"')
         return func
 
     return wrapper
 
 
-def listen_to(matchstr, flags=0):
+def listen_to(match_str, flags=0):
     def wrapper(func):
-        PluginsManager.commands['listen_to'][
-            re.compile(matchstr, flags)] = func
-        logger.info('registered listen_to plugin "%s" to "%s"', func.__name__,
-                    matchstr)
+        PluginsManager.commands['listen_to'][re.compile(match_str, flags)] = func
+        logger.info(f'registered listen_to plugin "{func.__name__}" to "{match_str}"')
+        return func
+
+    return wrapper
+
+
+def nlp_label_respond_to(match_label, flags=0, match_nlp_label=False):
+    def wrapper(func):
+        if nlp.is_backend_present():
+            PluginsManager.commands['nlp_label_respond_to'][re.compile(match_label, flags)] = func
+            logger.info(f'registered nlp_label_respond_to plugin "{func.__name__}" to "{match_label}"')
+        else:
+            logger.warning(f'no NLP backend is configured to handle nlp_label_respond_to for "{func.__name__}"')
+        return func
+
+    return wrapper
+
+
+def nlp_label_listen_to(match_label, flags=0):
+    def wrapper(func):
+        if nlp.is_backend_present():
+            PluginsManager.commands['nlp_label_listen_to'][re.compile(match_label, flags)] = func
+            logger.info(f'registered nlp_label_listen_to plugin "{func.__name__}" to "{match_label}"')
+        else:
+            logger.warning(f'no NLP backend is configured to handle nlp_label_listen_to for "{func.__name__}"')
         return func
 
     return wrapper

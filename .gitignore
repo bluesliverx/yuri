@@ -15,3 +15,5 @@ slackbot_test_settings.py
 /*.egg-info
 .cache
 /.vscode/
+model_training/*_data
+model_training/*_model

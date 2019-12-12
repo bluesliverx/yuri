@@ -56,6 +56,12 @@ PAGERDUTY_USERNAME_EMAIL_DOMAIN = None
 PAGERDUTY_DATE_FORMAT = "%Y-%m-%d %H:%M:%S %Z"
 
 
+'''
+Spacy configuration, this is optional
+'''
+SPACY_MODEL = None
+
+
 for key in os.environ:
     if key[:9] == 'SLACKBOT_':
         name = key[9:]

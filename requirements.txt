@@ -7,3 +7,5 @@ pytest>=2.9.1
 pygerduty>=0.38.2
 pytz>=2019.3
 humanize>=0.5.1
+# Lock spacy version since the models are built for version AFAIK
+spacy==2.2.3
