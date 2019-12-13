@@ -4,7 +4,7 @@ from datetime import datetime
 from pytz import timezone, UTC
 from typing import Optional
 from pygerduty.v2 import PagerDuty, Oncall, User
-from slackbot import settings
+from oncall_slackbot import settings
 import humanize
 
 

@@ -1,8 +1,9 @@
-A base for an on-call chat bot for [Slack](https://slack.com) heavily based on 
-[lins05/slackbot](https://github.com/lins05/slackbot). This repository is Python 3+ only.
+A base for an on-call chat bot for [Slack](https://slack.com) and extends classes from
+[lins05/slackbot](https://github.com/lins05/slackbot). While slackbot supports Python 2 and 3,
+this repository is Python 3+ only.
 
-This project was built during Adobe Garage Week 2019 in order to support easy creation of
-bots for on-call Slack channels that listen to events and can respond.
+This project was built during Adobe "Garage Week" 2019 in order to support the easy creation of
+bots for on-call Slack channels that listen to events and can respond intelligently.
 
 ## Features
 

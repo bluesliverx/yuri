@@ -2,7 +2,7 @@
 import logging
 import spacy
 from spacy.language import Doc, Language
-from slackbot import settings
+from oncall_slackbot import settings
 from typing import Optional
 
 

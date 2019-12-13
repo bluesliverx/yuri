@@ -1,9 +1,6 @@
-requests>=2.4.0
-websocket-client>=0.22.0,<=0.44.0
 # slacker is forked locally into the slacker directory to pull in support for blocks
 # see the readme in the slacker directory for more information
-#slacker>=0.13.0.UNRELEASED
-pytest>=2.9.1
+slackbot==0.5.5
 pygerduty>=0.38.2
 pytz>=2019.3
 humanize>=0.5.1

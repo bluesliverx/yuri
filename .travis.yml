@@ -1,6 +1,6 @@
 dist: trusty
 language: python
-python: 3.6
+python: 3.7
 cache:
   directories:
   - "$HOME/.cache/pip"
@@ -23,9 +23,9 @@ script:
 deploy:
   provider: pypi
   distributions: sdist bdist_wheel
-  user: lins05_slackbot
+  user: bluesliverx
   password:
-    secure: d+RIBeI8E66mLPZan5vgEYR5P4K+J8YfcAJR16MFVuoKkvMaCze+Ho5bFgUzN47wW+SzAjFixPI4fkB4Silk+7BCwMeQrBQq+CL9OYCZf2vPwl2K3QTScwVCreEF05u3V1x5lm3/UvzTAuz0knaXwrWelRm5DOVf3DZPjWEcXtA=
+    secure: "Q79AlhUq+CN/agMtdlW1hfK2Il9wmfToL0yYqadbUzYudjE5X5DY8niSabBX7/iPLh/fSpgYdzzlZzmVA9dxJz2Tdlixrd6PZ7eZvaevzdTcgWaaIjkYwwhv04YbLkRosyches4Ql5lCl3jeiX47DCfK6RvOOf6cy27HuwQ+Q2noe56/XFLcxBHAku53jfUQ4Ee9AzBLHsKoYjih5DPpgZOJ3I1KWbdyiNaNqlGojojKcuOcn9nVzyeFiJEtinBze6SYHdg8EJmKGDRrUyrDhCjtIr/PBA/suXqP9vfxQz2yS6k3i8XqmtfHwK//PMJcnn1ZvCWq5CSfDtsMKKGo61J5paBi50sg14fm2urYbNGsZESClSWKANgj6duwMyXzPT2gT6eZE9T/EWlC/RBcYsYnjfWgILXPngITmoh8R7K74RdoLQejWy9B5tLGlVD1u9A3EqbGdN9qmUkWNwPGXzJyYG6RTexOmqwQVFcdXQcVIq8eKEweGbaUi/DhKfn2sgny/fssga4KdURNln5pFNfSAJKAsckXR0XXcEFuS5r44v3YIHEgIlC18BXDdW4JhNkRAXEM6W9a5pFgJXeLqIL/5AH+0Aqy2v0GccFlUN1i03VEK08Mj/eox8UNDJZygCxnDAE2TV/Dl02KMWj6i/dZcQB+u9DNjfk+13in9K0="
   on:
     tags: true
-    repo: lins05/slackbot
+    repo: bluesliverx/oncall-slackbot

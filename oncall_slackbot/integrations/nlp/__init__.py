@@ -1,5 +1,5 @@
 
-from slackbot.integrations.nlp import spacy as nlp_spacy
+from oncall_slackbot.integrations.nlp import spacy as nlp_spacy
 from typing import Optional
 
 
@@ -8,7 +8,7 @@ def _noop_generate_label(message_text: str) -> Optional[str]:
 
 
 if nlp_spacy.is_configured():
-    from slackbot.integrations.nlp.spacy import generate_label
+    from oncall_slackbot.integrations.nlp.spacy import generate_label
 else:
     # Install a noop version as the label generator
     generate_label = _noop_generate_label

@@ -3,8 +3,8 @@
 import sys
 import logging
 import logging.config
-from slackbot import settings
-from slackbot.bot import Bot
+from oncall_slackbot import settings
+from oncall_slackbot.bot import OnCallBot
 
 
 def main():
@@ -16,8 +16,9 @@ def main():
     }
     logging.basicConfig(**kw)
     logging.getLogger('requests.packages.urllib3.connectionpool').setLevel(logging.WARNING)
-    bot = Bot()
+    bot = OnCallBot()
     bot.run()
+
 
 if __name__ == '__main__':
     main()

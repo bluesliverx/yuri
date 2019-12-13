@@ -1,27 +1,29 @@
 from os.path import join, dirname
+import os
 from setuptools import setup, find_packages
 
-__version__ = open(join(dirname(__file__), 'slackbot/VERSION')).read().strip()
+__version__ = open(join(dirname(__file__), 'oncall_slackbot/VERSION')).read().strip()
 
 install_requires = (
-    'requests>=2.4.0',
-    'websocket-client>=0.22.0,<=0.44.0',
-    'slacker>=0.9.50',
-    'six>=1.10.0'
-) # yapf: disable
+    'slackbot==0.5.5',
+    'pygerduty>=0.38.2',
+    'pytz>=2019.3',
+    'humanize>=0.5.1',
+    'spacy==2.2.3',
+)  # yapf: disable
 
 excludes = (
     '*test*',
     '*local_settings*',
 ) # yapf: disable
 
-setup(name='slackbot',
+setup(name='oncall-slackbot',
       version=__version__,
       license='MIT',
-      description='A simple chat bot for Slack',
-      author='Shuai Lin',
-      author_email='linshuai2012@gmail.com',
-      url='http://github.com/lins05/slackbot',
+      description='Extended slackbot made specifically to handle on-call requests',
+      author='Shuai Lin; Brian Saville',
+      author_email='linshuai2012@gmail.com; saville@adobe.com',
+      url='http://github.com/bluesliverx/oncall-slackbot',
       platforms=['Any'],
       packages=find_packages(exclude=excludes),
       install_requires=install_requires,
