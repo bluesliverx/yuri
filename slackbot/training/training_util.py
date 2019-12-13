@@ -55,6 +55,10 @@ def _evaluate(tokenizer, textcat, data: List[Tuple[str, Dict[str, Dict[str, bool
 
 
 def test_textcat_model(model_dir: str, text: str, expected_cat: Optional[str] = None) -> bool:
+    """
+    Tests the given test with the expected category/label (if present).
+    :return: True if the expected matched actual, false otherwise (always true when expected is unspecified)
+    """
     nlp = spacy.load(model_dir)
     doc = nlp(text)
     has_failures = False
@@ -66,10 +70,9 @@ def test_textcat_model(model_dir: str, text: str, expected_cat: Optional[str] = 
             print(f'FAIL: expected {expected_cat}, actual {best_score} ({text})')
             has_failures = True
     else:
-        print(f'Testing text: {text}')
         for cat, score in doc.cats.items():
             print('{0:.3f}\t{1}'.format(score, cat))
-    return has_failures
+    return not has_failures
 
 
 def train_textcat_model(

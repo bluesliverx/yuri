@@ -30,14 +30,15 @@ from slackbot.training import training_util
 
 DEFAULT_DATA_FILE = os.environ.get(
     'SLACK_MODEL_DATA_PATH',
-    os.path.join(root_path, 'model-training/slack_channel_data/latest.json')
+    os.path.join(root_path, 'yuri-data/slack_channel_data/data.json')
 )
 DEFAULT_MODEL_DIR = os.environ.get(
     'SLACK_MODEL_OUTPUT_PATH',
-    os.path.join(root_path, 'model-training/slack_channel_model')
+    os.path.join(root_path, 'yuri-data/slack_channel_model')
 )
 DEFAULT_BATCH_SIZE = 10
-USERS_CACHE = {}
+DIRECTION_NEWER = True
+DIRECTION_OLDER = False
 IGNORE_LABEL = 'ignore'
 CREATE_LABEL = '+add new'
 INQUIRER_RENDER = ConsoleRender(theme=GreenPassion())
@@ -57,11 +58,17 @@ def get_channel_id(token: str, name: str, session: Optional[Session] = None) -> 
         name = name[1:]
 
     client = get_client(token, session=session)
-    first_query = True
+    start_query = True
     cursor = None
-    while first_query or cursor:
-        first_query = False
-        response = client.conversations.list(types=['public_channel', 'private_channel'], cursor=cursor)
+    while start_query or cursor:
+        start_query = False
+        try:
+            # Query 1000 at a time (the max supported) to keep the number of requests lower
+            response = client.conversations.list(types=['public_channel', 'private_channel'], cursor=cursor, limit=1000)
+        except Exception as e:
+            if inquirer.confirm(f'Encountered error while retrieving channel ID for {name} ({e}), retry?', default=True):
+                return get_channel_id(token, name, session=session)
+            raise
         channels = response.body['channels']
         for channel in channels:
             if channel['name'] == name:
@@ -70,19 +77,37 @@ def get_channel_id(token: str, name: str, session: Optional[Session] = None) -> 
     raise Exception(f'Could not find channel {name} in list of channels for this user')
 
 
-def get_messages(token: str, channel_id: str, latest_timestamp: Optional[str],
-                 batch_size: Optional[int], session: Optional[Session] = None) -> Tuple[List[dict], Optional[str]]:
+def get_messages(
+        token: str, channel_id: str, start_timestamp: Optional[str], end_timestamp: Optional[str],
+        direction: bool, batch_size: Optional[int], session: Optional[Session] = None
+) -> Tuple[List[dict], Optional[str], Optional[str]]:
     """
-    Retrieves a list of messages, sorted in reverse age order, as well as the latest timestamp
-    :return: Tuple of messages sorted in reverse age order and the latest timestamp
+    Retrieves a list of messages
+    :return: Tuple of messages sorted according to the direction and the start/end timestamps
     """
     client = get_client(token, session=session)
-    response = client.conversations.history(channel_id, limit=batch_size, latest=latest_timestamp)
-    # The messages are already in reverse age order, with the latest first
+    if direction == DIRECTION_OLDER:
+        timestamp_args = {'latest': start_timestamp}
+    else:
+        timestamp_args = {'oldest': end_timestamp}
+    try:
+        response = client.conversations.history(channel_id, limit=batch_size, **timestamp_args)
+    except Exception as e:
+        if inquirer.confirm(f'Encountered error while retrieving messages ({e}), retry?', default=True):
+            return get_messages(
+                token, channel_id, start_timestamp, end_timestamp, direction, batch_size, session=session
+            )
+        # Return nothing since we did not retry
+        return [], None, None
+    # The messages are already in reverse age order, with the latest chronologically at the front of the list
     messages = response.body['messages']
-    # Set the latest timestamp to the oldest message's timestamp
-    latest_timestamp = messages[-1]['ts'] if len(messages) > 0 else None
-    return messages, latest_timestamp
+    if direction == DIRECTION_OLDER:
+        start_timestamp = messages[-1]['ts'] if len(messages) > 0 else None
+    else:
+        # If we want newer messages, reverse the order
+        messages.reverse()
+        end_timestamp = messages[-1]['ts'] if len(messages) > 0 else None
+    return messages, start_timestamp, end_timestamp
 
 
 def get_data_labels(data: Dict[str, dict]) -> Set[str]:
@@ -193,25 +218,37 @@ def classify_batch(messages: List[dict], data: Dict[str, dict], all_labels: Set[
     return added, updated
 
 
-def classify_messages(token: str, channel_id: str, data: Dict[str, dict], latest_timestamp: Optional[str],
+def classify_messages(token: str, channel_id: str, data: Dict[str, dict], start_timestamp: Optional[str],
+                      end_timestamp: Optional[str], direction: bool,
                       ignore_user_ids: Optional[Set[str]], batch_size: Optional[int] = None,
-                      session: Optional[Session] = None) -> Optional[str]:
+                      session: Optional[Session] = None) -> Tuple[Optional[str], Optional[str]]:
     all_labels = get_data_labels(data)
     done = False
     while not done:
-        previous_latest_timestamp = latest_timestamp
-        messages, latest_timestamp = get_messages(token, channel_id, latest_timestamp, batch_size, session=session)
         print('-------------------------------------------------------------------------------------')
+        previous_start_timestamp = start_timestamp
+        previous_end_timestamp = end_timestamp
+        messages, start_timestamp, end_timestamp = get_messages(
+            token, channel_id, start_timestamp, end_timestamp, direction, batch_size, session=session
+        )
+
+        # Make sure the timestamps are actually set (if get_messages returns none for them, use the last values)
+        start_timestamp = start_timestamp or previous_start_timestamp
+        end_timestamp = end_timestamp or previous_end_timestamp
+
+        # Create a timestamp label for messages
+        if direction == DIRECTION_OLDER:
+            timestamp_label = f'before {start_timestamp}'
+        else:
+            timestamp_label = f'after {end_timestamp}'
 
         # Make sure there are messages to process
         if not messages:
-            latest_timestamp = previous_latest_timestamp
-            print(f'No new messages found before {latest_timestamp}, exiting')
+            print(f'No new messages found {timestamp_label}, exiting')
             break
 
         # Classify the next batch
-        print(f'Retrieved new batch of {len(messages)} message{"s" if len(messages) > 1 else ""} '
-              f'(latest timestamp is {latest_timestamp})')
+        print(f'Retrieved new batch of {len(messages)} message{"s" if len(messages) > 1 else ""} ({timestamp_label})')
         added, updated = classify_batch(messages, data, all_labels, ignore_user_ids=ignore_user_ids)
         for message_id, classification in added.items():
             data[message_id] = classification
@@ -223,13 +260,13 @@ def classify_messages(token: str, channel_id: str, data: Dict[str, dict], latest
                                 default=True, render=INQUIRER_RENDER):
             done = True
 
-    return latest_timestamp
+    return start_timestamp, end_timestamp
 
 
-def load_data(data_file: str, append: bool = True) -> Tuple[dict, Optional[str]]:
+def load_data(data_file: str, append: bool = True) -> Tuple[dict, Optional[str], Optional[str]]:
     print(f'Using data file at {data_file}')
     if not os.path.exists(data_file):
-        return {}, None
+        return {}, None, None
 
     if not append:
         raise Exception(
@@ -243,11 +280,11 @@ def load_data(data_file: str, append: bool = True) -> Tuple[dict, Optional[str]]
             raise Exception(f'The existing data file ({data_file}) is invalid, please check the file')
         data = data_file.get('data', {})
         print(f'Found {len(data)} total entries stored in the data file')
-        return data, data_file.get('latest_timestamp')
+        return data, data_file.get('start_timestamp'), data_file.get('end_timestamp')
 
 
-def write_data(data: Dict[str, dict], latest_timestamp: Optional[str], data_file: str):
-    # Make the directory first
+def write_data(data: Dict[str, dict], start_timestamp: Optional[str], end_timestamp: Optional[str], data_file: str):
+    # Make the directory start
     dir_path = os.path.dirname(data_file)
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
@@ -256,7 +293,8 @@ def write_data(data: Dict[str, dict], latest_timestamp: Optional[str], data_file
     with open(data_file, 'w') as fobj:
         fobj.write(json.dumps({
             'data': data,
-            'latest_timestamp': latest_timestamp,
+            'start_timestamp': start_timestamp,
+            'end_timestamp': end_timestamp,
         }, indent=2))
         print(f'Successfully wrote data to {data_file}')
 
@@ -267,38 +305,41 @@ def write_data(data: Dict[str, dict], latest_timestamp: Optional[str], data_file
 def test_model(args):
     if not args.model_dir:
         raise Exception('The model dir was not specified, please try again')
-    if not args.test_text and not args.test_file:
+    if not args.test_text_or_file:
         raise Exception('Text to test must be provided')
 
     print(f'Loading model from {args.model_dir}')
 
     has_failures = False
-    if args.test_file:
-        with open(args.test_file, 'r') as fobj:
+    if os.path.exists(args.test_text_or_file):
+        print(f'Reading {args.test_text_or_file} as a tab-separated file')
+        with open(args.test_text_or_file, 'r') as fobj:
             file_contents = fobj.read()
         for i, line in enumerate(file_contents.splitlines()):
             elems = line.split('\t')
             if len(elems) != 2:
                 raise Exception(
-                    f'Line {i + 1} of {args.test_file} is invalid, '
+                    f'Line {i + 1} of {args.test_text_or_file} is invalid, '
                     f'it should contain two tab-separated values, but has {len(elems)}'
                 )
             if not training_util.test_textcat_model(args.model_dir, elems[0], elems[1]):
                 has_failures = True
     else:
-        if not training_util.test_textcat_model(args.model_dir, args.test_text, args.expected_label):
+        print(f'Testing text "{args.test_text_or_file}"')
+        if not training_util.test_textcat_model(args.model_dir, args.test_text_or_file, args.expected_label):
             has_failures = True
 
     if has_failures:
-        print('Encountered verification errors, please see above')
-        sys.exit(1)
+        raise Exception('Encountered verification errors, please see above')
+    else:
+        print(f'All tests passed successfully')
 
     
 def train(args):
     if not args.output_dir:
         raise Exception('The output dir was not specified, please try again')
 
-    data, _ = load_data(args.data_file)
+    data, _, _ = load_data(args.data_file)
     labels = set(data[key]['label'] for key in data)
 
     def get_labels(true_label: str) -> Dict[str, bool]:
@@ -313,7 +354,9 @@ def train(args):
     ]:
         nonlocal data
         limit = len(data)
-        train_limit = int(limit * 0.8)
+        train_limit = int(limit * (args.eval_percentage / 100))
+        print(f'Training data with {train_limit} entries and evaluating with {limit - train_limit} entries '
+              f'({args.eval_percentage}%)')
         tuple_data = []
         for _, classification in data.items():
             tuple_data.append(
@@ -334,24 +377,28 @@ def classify(args):
         ignore_user_ids = set(args.ignore_user_ids.split(','))
     else:
         ignore_user_ids = None
-        
+
     # with Session() as session:
     channel_id = get_channel_id(args.slack_token, args.slack_channel)
-    data, latest_timestamp = load_data(args.data_file, args.append)
-    latest_timestamp = classify_messages(
+    data, start_timestamp, end_timestamp = load_data(args.data_file, args.append)
+    start_timestamp, end_timestamp = classify_messages(
         args.slack_token,
         channel_id,
         data,
-        # Override the latest timestamp to use if specified
-        args.latest_timestamp or latest_timestamp,
+        # Override the timestamps to use if specified
+        args.start_timestamp or start_timestamp,
+        args.end_timestamp or end_timestamp,
+        args.direction,
         ignore_user_ids=ignore_user_ids,
         batch_size=args.batch_size,
         )
-    write_data(data, latest_timestamp, args.data_file)
+    write_data(data, start_timestamp, end_timestamp, args.data_file)
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Makes it easy to train a model based on messages in a slack channel')
+    parser = argparse.ArgumentParser(
+        description='Yuri the trainer who trains. Makes it easy to train a model based on messages in a slack channel.'
+    )
     parser.add_argument(
         "-d", "--data-file",
         dest="data_file",
@@ -361,46 +408,6 @@ def main():
     )
 
     subparsers = parser.add_subparsers(title='command')
-
-    train_parser = subparsers.add_parser('train', description='Train a model from the classified data file')
-    train_parser.add_argument(
-        "-o", "--output-dir",
-        dest="output_dir",
-        default=DEFAULT_MODEL_DIR,
-        help=f"The output directory for the model, defaults to the value of the "
-             f"SLACK_MODEL_OUTPUT_PATH env var or '{DEFAULT_MODEL_DIR}'",
-    )
-    train_parser.add_argument(
-        "-t", "--test-text",
-        dest="test_text",
-        help="Text to use for a test at the end of training",
-    )
-    train_parser.set_defaults(func=train)
-
-    test_parser = subparsers.add_parser('test', description='Test a trained model\'s output')
-    test_parser.add_argument(
-        "-m", "--model-dir",
-        dest="model_dir",
-        default=DEFAULT_MODEL_DIR,
-        help=f"The directory for the model, defaults to {DEFAULT_MODEL_DIR}",
-    )
-    test_parser.add_argument(
-        "-e", "--expected-label",
-        dest="expected_label",
-        help="The label expected to be generated with the best score from the test",
-    )
-    test_parser.add_argument(
-        "-t", "--test-text",
-        dest="test_text",
-        help="Text to use for a test, if it is a file, "
-             "read the file as tab separated with the text first and expected label second",
-    )
-    test_parser.add_argument(
-        "-f", "--test-file",
-        dest="test_file",
-        help="Test file that is tab separated with the text first and expected label second",
-    )
-    test_parser.set_defaults(func=test_model)
 
     classify_parser = subparsers.add_parser('classify', description='Classify messages from slack')
     classify_parser.add_argument(
@@ -428,9 +435,21 @@ def main():
         help="If set, does not append data to the data file and errors out if the file already exists",
     )
     classify_parser.add_argument(
-        "-l", "--latest-timestamp",
-        dest="latest_timestamp",
-        help="Sets the latest timestamp to use instead of ",
+        "-s", "--start-timestamp",
+        dest="start_timestamp",
+        help="Sets the start timestamp to use instead of now if not present in the data file",
+    )
+    classify_parser.add_argument(
+        "-e", "--end-timestamp",
+        dest="end_timestamp",
+        help="Sets the end timestamp to use instead of now if not present in the data file",
+    )
+    classify_parser.add_argument(
+        "-f", "--forward",
+        dest="direction",
+        action="store_true",
+        help="If set, move forward in time from the end timestamp, "
+             "if not set, move backward in time from the start timestamp",
     )
     classify_parser.add_argument(
         "-t", "--token",
@@ -440,6 +459,48 @@ def main():
              "This MUST be a user token and not a bot token due to the permissions needed for conversation history.",
     )
     classify_parser.set_defaults(func=classify)
+
+    train_parser = subparsers.add_parser('train', description='Train a model from the classified data file')
+    train_parser.add_argument(
+        "-o", "--output-dir",
+        dest="output_dir",
+        default=DEFAULT_MODEL_DIR,
+        help=f"The output directory for the model, defaults to the value of the "
+        f"SLACK_MODEL_OUTPUT_PATH env var or '{DEFAULT_MODEL_DIR}'",
+    )
+    train_parser.add_argument(
+        "-t", "--test-text",
+        dest="test_text",
+        help="Text to use for a test at the end of training",
+    )
+    train_parser.add_argument(
+        "-p", "--eval-percentage",
+        dest="eval_percentage",
+        type=int,
+        default=80,
+        choices=range(1,99),
+        help="The percentage of data used for evaluation as opposed to training (between 1 and 99), defaults to 80",
+    )
+    train_parser.set_defaults(func=train)
+
+    test_parser = subparsers.add_parser('test', description='Test a trained model\'s output')
+    test_parser.add_argument(
+        "-m", "--model-dir",
+        dest="model_dir",
+        default=DEFAULT_MODEL_DIR,
+        help=f"The directory for the model, defaults to {DEFAULT_MODEL_DIR}",
+    )
+    test_parser.add_argument(
+        "-e", "--expected-label",
+        dest="expected_label",
+        help="The label expected to be generated with the best score from the test",
+    )
+    test_parser.add_argument(
+        "test_text_or_file",
+        help="Text to use for a test, this may be a file which will then be read as tab-separated lines "
+             "with the text first and expected label second",
+    )
+    test_parser.set_defaults(func=test_model)
 
     args = parser.parse_args()
     if not hasattr(args, 'func'):

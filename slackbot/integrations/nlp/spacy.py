@@ -1,7 +1,7 @@
 
 import logging
 import spacy
-from spacy.language import Language
+from spacy.language import Doc, Language
 from slackbot import settings
 from typing import Optional
 
@@ -39,13 +39,19 @@ def _get_nlp() -> Optional[Language]:
     return _nlp
 
 
-def generate_label(message_text: str) -> Optional[str]:
+def get_doc(message_text: str) -> Optional[Doc]:
     if not message_text:
         return None
     nlp = _get_nlp()
     if not nlp:
         return None
-    doc = nlp(message_text)
+    return nlp(message_text)
+
+
+def generate_label(message_text: str) -> Optional[str]:
+    doc = get_doc(message_text)
+    if not doc:
+        return None
     return max(doc.cats.keys(), key=lambda cat: doc.cats[cat])
 
 
