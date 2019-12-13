@@ -26,6 +26,7 @@ deploy:
   user: bksaville
   password:
     secure: "GopXMvrzE/HBJqEdn8nbwSDb0YrIA0Z7ffVz6E7LYB9sjzxhTqyPB8VeaglPG2bzUn5J+7laUd5rMMrmgLM/YvAT7+YPsjeZoDF7EA8jnkpmoZDaMm6DlBZJ3vGMUA12yQymzkVqe1B8MF23lSJup1LCK6YIamC7KQQQa1xqmV+TGgOTLkx9IXveVqDUxbit1lIZI29pn6Hz8ibEyuTBXDTY4wTe16NpnSmWNor/aMpWMB2GnFLcvYbAim3fpvnQQKG5kdclOodw322mxRip7bzlUHw9qWUoOpemM0JerTunJgAT59G0IQLq0i2Z8lPjGDBEOxtDlJgEOCVYktlFyI07BmH4bwPgOnP7wz0fiD3T6de2Xm0oBM1+aH+F5br1N8Mv0SFEwxacxT2Gl48U8l1ed/Z2ZUQzDOXUyilqr/dBdSPjB/M0OSeOpvu8c+mrvDHVMpwVHsailDka5dPd3JZ4aXY4C55ASZTDpR1aW1tXxIQ1R6XRzEhbwUgM/SXXXZaa+ft60bb1QbTosm5f85uO/zdv4CX1Bbr6tsG8aeaz5L3IMCrVPzECTn9mFitGo1QZFdRdYKJvY25S+22bL+4rOa/ZMwU2DK5vxWsQhuHDV33x39MPDhGqS4IgtAGz6iMogrv/C48usf5gWcJPLHISjjofu/4kXpcxM5a5cZM="
+  skip_cleanup: true
   on:
     tags: true
     repo: bluesliverx/oncall-slackbot
