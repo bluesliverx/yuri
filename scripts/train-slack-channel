@@ -139,8 +139,9 @@ def classify_batch(messages: List[dict], data: Dict[str, dict], all_labels: Set[
         message_text = message.get('text') or '<NO TEXT>'
         message_id = f'{message.get("ts")}-{message.get("user")}'
         print(f'{i + 1}/{messages_len} {message_text}')
-        if not message.get('text') or message.get('attachments') or message.get('blocks'):
-            print('Message has no text or attachments/blocks, skipping')
+        # We cannot check for blocks as the newer updates of the slack client always add blocks apparently
+        if not message.get('text') or message.get('attachments'):
+            print('Message has no text or attachments, skipping')
             continue
         message_user = message.get('user')
         if ignore_user_ids and message_user in ignore_user_ids:
@@ -198,8 +199,17 @@ def classify_messages(token: str, channel_id: str, data: Dict[str, dict], latest
     all_labels = get_data_labels(data)
     done = False
     while not done:
+        previous_latest_timestamp = latest_timestamp
         messages, latest_timestamp = get_messages(token, channel_id, latest_timestamp, batch_size, session=session)
         print('-------------------------------------------------------------------------------------')
+
+        # Make sure there are messages to process
+        if not messages:
+            latest_timestamp = previous_latest_timestamp
+            print(f'No new messages found before {latest_timestamp}, exiting')
+            break
+
+        # Classify the next batch
         print(f'Retrieved new batch of {len(messages)} message{"s" if len(messages) > 1 else ""} '
               f'(latest timestamp is {latest_timestamp})')
         added, updated = classify_batch(messages, data, all_labels, ignore_user_ids=ignore_user_ids)
@@ -208,6 +218,7 @@ def classify_messages(token: str, channel_id: str, data: Dict[str, dict], latest
         for message_id, classification in updated.items():
             data[message_id] = classification
 
+        # Continue?
         if not inquirer.confirm(f'{len(data)} total messages classified, continue to the next batch of messages?',
                                 default=True, render=INQUIRER_RENDER):
             done = True
