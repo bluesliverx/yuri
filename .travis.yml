@@ -41,5 +41,4 @@ deploy:
 - provider: script
   script: bash deploy-docker
   on:
-    branch: master
     tags: true
