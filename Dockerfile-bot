@@ -1,0 +1,4 @@
+ARG FROM_IMAGE_NAME
+FROM $FROM_IMAGE_NAME:latest
+ADD run.py /
+ENTRYPOINT ["/run.py"]
