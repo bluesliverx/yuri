@@ -1,2 +1,2 @@
-include oncall_slackbot/VERSION
+include yuri/VERSION
 include LICENSE.txt

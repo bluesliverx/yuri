@@ -5,23 +5,14 @@ services:
 - docker
 env:
   global:
-  - BASE_IMAGE_NAME=bksaville/oncall-slackbot
+  - IMAGE_NAME=bksaville/yuri
   - DOCKER_USERNAME=bksaville
   # DOCKER_PASSWORD=...
-  - secure: Gesnm0yMa4BZ1/R47LqlVS6/vBtHnToTvNrMjtJaqKjZM8hgtWMe9CoxqzyH5UJR4x03/jHtmOukpZ7gDpVEP1qsa9YJlNG8VmASwBFU+TbzwkkAUxpVEYKuVGmu9S8+H3fL24jjaEFY/VTB5oxDUHazg3DtkmPK98OCSU8MXAQRTNpHoyJvi8MEnnTHWwRgaB7QKnm6iyFABXGEtVXyVq1OuCiORgU6Aeoj6ZC2y6Bnkhe8C1Lkyt/VCRiMpQDigs+mLV/cS4hKtbW2r0AUKHUpdnzHddN8wf/CsX7wPCyZo1H7imw4f6swPB44xT+j4wnLOKF6xIHtHRikrtFffMT4EUpQHwZOAS19MnMaMt0om5j9lHhFs2PcfwFIQTxYSNLrGogc/QKjWmCXhpaLLy5SN8LcdIFVRv5CtAvSHVRALSnyJURtqyJ8N/tA5M8sokHrUJwNMIZBIQIueAi5FoJnhhu4HJLIh0ZvU85zZsopcC5SoPdt4/fKtUlhzZNxEr6o2O3jpA04bzhZLo+clr6l5fJtIkeCkF2DuT2Nz9wckVXuQRhr+BK+Iuyj/T5TFfM+AcIdcI2HdkDO+mYMKN4NEUWtTGMEpq6DrRz4AQ8WbqpdYIpK6AI2/qyqeyuTpfIk5V4YYC9+BMVkOvaqX7Puk0COWrIAe44pMb1EuUI=
+  - secure: "Za9oVY7NnrK/Fy6q0++jVKAejWUPYe7bggEh59Ni6QO92KwkOU5yvLwa2YNCN06N4jOXh6BES/m+4Z3YJl9nh0snS9TrtKWVLNdTz/zwbiTs1stTiV+Krj7hCMBqPgkBJi/ckD6OFwBlUI9YI3skja0PJP4Z6M8QaLEvb4NEpXL9vezwdwP+Z1OkHg0iPjh471Td1XfWo0ihlNdiw7rTNNsFoxrXaZhtjUBTdcq0+u8U8pz1ILYfbQanGcm/vzeKxnjmuLbDLD7jxfl+ygNf72TikDDTFcXGtBP4UJSEkGlQCNTaCiK/hclXNJ+dBPOPghk8Xk6l84PMJa82pLQ6aDvWSbhXKAJv14Di293Rsq7sZuqYX+VSKICMakC4ngfVlgagPyyn+RnyfqZhXchtlPWfmrsqVwBapEUVWdHwbK5mS47JQq13JAJyKalFhcWOgjjQU2fY+qqI9EBNlaA5jjFln3axOv+t+oYr5j3h3tY2hvQT3kXEc3XfNaIn0GD0NgEVTVyPLqiYkU3s17pBe8+E8v60g5Kg3S/QP5UC8lg3RfQIpVrjoDOSK2N6pisP9vCnnyYCOr4WMeGdZiDOJJUjIgVuJeUSAaLIedhBRLpzRUsjA0UIda4+JLi1/kOzoRC5woYfhXbxRcEfo53lf5fNTIDc0CYLusegPzTzkps="
 cache:
   directories:
   - "$HOME/.cache/pip"
   - "$TRAVIS_BUILD_DIR/.tox"
-before_install:
-- mkdir -p $HOME/opt/local/bin
-- export PATH=$HOME/opt/local/bin:$PATH
-- pushd /tmp/ && git clone https://github.com/rofl0r/proxychains-ng.git && cd proxychains-ng
-  && ./configure --prefix=$HOME/opt/local && make -j2 && make install && popd
-- pip install shadowsocks
-- cp scripts/slackbot-test-ctl $HOME/opt/local/bin
-- slackbot-test-ctl init
-- slackbot-test-ctl startproxy
 install: pip install tox
 script:
 - |
@@ -29,15 +20,15 @@ script:
     tox
   fi
 deploy:
-- provider: pypi
-  distributions: sdist bdist_wheel
-  user: __token__
-  password:
-    secure: GopXMvrzE/HBJqEdn8nbwSDb0YrIA0Z7ffVz6E7LYB9sjzxhTqyPB8VeaglPG2bzUn5J+7laUd5rMMrmgLM/YvAT7+YPsjeZoDF7EA8jnkpmoZDaMm6DlBZJ3vGMUA12yQymzkVqe1B8MF23lSJup1LCK6YIamC7KQQQa1xqmV+TGgOTLkx9IXveVqDUxbit1lIZI29pn6Hz8ibEyuTBXDTY4wTe16NpnSmWNor/aMpWMB2GnFLcvYbAim3fpvnQQKG5kdclOodw322mxRip7bzlUHw9qWUoOpemM0JerTunJgAT59G0IQLq0i2Z8lPjGDBEOxtDlJgEOCVYktlFyI07BmH4bwPgOnP7wz0fiD3T6de2Xm0oBM1+aH+F5br1N8Mv0SFEwxacxT2Gl48U8l1ed/Z2ZUQzDOXUyilqr/dBdSPjB/M0OSeOpvu8c+mrvDHVMpwVHsailDka5dPd3JZ4aXY4C55ASZTDpR1aW1tXxIQ1R6XRzEhbwUgM/SXXXZaa+ft60bb1QbTosm5f85uO/zdv4CX1Bbr6tsG8aeaz5L3IMCrVPzECTn9mFitGo1QZFdRdYKJvY25S+22bL+4rOa/ZMwU2DK5vxWsQhuHDV33x39MPDhGqS4IgtAGz6iMogrv/C48usf5gWcJPLHISjjofu/4kXpcxM5a5cZM=
-  skip_cleanup: true
-  on:
-    tags: true
-    repo: bluesliverx/oncall-slackbot
+#- provider: pypi
+#  distributions: sdist bdist_wheel
+#  user: __token__
+#  password:
+#    secure: <ENCRYPTED-PASSWORD>
+#  skip_cleanup: true
+#  on:
+#    tags: true
+#    repo: bluesliverx/yuri
 - provider: script
   script: bash deploy-docker
   on:

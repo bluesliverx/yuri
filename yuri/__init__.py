@@ -1,11 +1,4 @@
-#!/usr/bin/env python3
 
-"""
-Requires the `inquirer` module to be installed
-pip install inquirer
-"""
-
-import argparse
 import inquirer
 import json
 import os
@@ -20,22 +13,17 @@ from requests import Session
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 
-root_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '../'))
-if root_path not in sys.path:
-    sys.path.append(root_path)
+parent_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '../'))
+if parent_path not in sys.path:
+    sys.path.append(parent_path)
 
 
-from oncall_slackbot.training import training_util
+from . import training
 
 
-DEFAULT_DATA_FILE = os.environ.get(
-    'SLACK_MODEL_DATA_PATH',
-    os.path.join(root_path, 'yuri-data/slack_channel_data/data.json')
-)
-DEFAULT_MODEL_DIR = os.environ.get(
-    'SLACK_MODEL_OUTPUT_PATH',
-    os.path.join(root_path, 'yuri-data/slack_channel_model')
-)
+ROOT_PATH = os.path.join(os.environ.get('YURI_ROOT_PATH', parent_path), 'yuri-data')
+DEFAULT_DATA_FILE = os.path.join(ROOT_PATH, 'slack_channel_data/data.json')
+DEFAULT_MODEL_DIR = os.path.join(ROOT_PATH, 'slack_channel_model')
 DEFAULT_BATCH_SIZE = 10
 DIRECTION_NEWER = True
 DIRECTION_OLDER = False
@@ -322,11 +310,11 @@ def test_model(args):
                     f'Line {i + 1} of {args.test_text_or_file} is invalid, '
                     f'it should contain two tab-separated values, but has {len(elems)}'
                 )
-            if not training_util.test_textcat_model(args.model_dir, elems[0], elems[1]):
+            if not training.test_textcat_model(args.model_dir, elems[0], elems[1]):
                 has_failures = True
     else:
         print(f'Testing text "{args.test_text_or_file}"')
-        if not training_util.test_textcat_model(args.model_dir, args.test_text_or_file, args.expected_label):
+        if not training.test_textcat_model(args.model_dir, args.test_text_or_file, args.expected_label):
             has_failures = True
 
     if has_failures:
@@ -366,7 +354,7 @@ def train(args):
         random.shuffle(tuple_data)
         return tuple_data[:train_limit], tuple_data[train_limit:]
 
-    training_util.train_textcat_model(
+    training.train_textcat_model(
         load_data_func=data_func, output_dir=args.output_dir, labels=labels, test_text=args.test_text
     )
     
@@ -393,127 +381,3 @@ def classify(args):
         batch_size=args.batch_size,
         )
     write_data(data, start_timestamp, end_timestamp, args.data_file)
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description='Yuri the trainer who trains. Makes it easy to train a model based on messages in a slack channel.'
-    )
-    parser.add_argument(
-        "-d", "--data-file",
-        dest="data_file",
-        default=DEFAULT_DATA_FILE,
-        help=f"The data file to use for storage, defaults to the value of the "
-             f"SLACK_MODEL_DATA_PATH env var or '{DEFAULT_DATA_FILE}'",
-    )
-
-    subparsers = parser.add_subparsers(title='command')
-
-    classify_parser = subparsers.add_parser('classify', description='Classify messages from slack')
-    classify_parser.add_argument(
-        "slack_channel",
-        help="The slack channel to pull messages from, with or without the # prefix",
-    )
-    classify_parser.add_argument(
-        "-b", "--batch-size",
-        dest="batch_size",
-        default=DEFAULT_BATCH_SIZE,
-        type=int,
-        help=f"The number of messages to retrieve at a time, defaults to {DEFAULT_BATCH_SIZE}",
-    )
-    classify_parser.add_argument(
-        "-i", "--ignore-user_ids",
-        dest="ignore_user_ids",
-        default=os.environ.get('SLACK_IGNORE_USER_IDS'),
-        help="May be set to a comma separated list of user IDs (e.g. W3J13MBJA) that should be ignored. "
-             "Pulled from the SLACK_IGNORE_USER_IDS environment variable if not set.",
-    )
-    classify_parser.add_argument(
-        "-o", "--no-overwrite",
-        action="store_false",
-        dest="append",
-        help="If set, does not append data to the data file and errors out if the file already exists",
-    )
-    classify_parser.add_argument(
-        "-s", "--start-timestamp",
-        dest="start_timestamp",
-        help="Sets the start timestamp to use instead of now if not present in the data file",
-    )
-    classify_parser.add_argument(
-        "-e", "--end-timestamp",
-        dest="end_timestamp",
-        help="Sets the end timestamp to use instead of now if not present in the data file",
-    )
-    classify_parser.add_argument(
-        "-f", "--forward",
-        dest="direction",
-        action="store_true",
-        help="If set, move forward in time from the end timestamp, "
-             "if not set, move backward in time from the start timestamp",
-    )
-    classify_parser.add_argument(
-        "-t", "--token",
-        dest='slack_token',
-        default=os.environ.get('SLACK_TOKEN'),
-        help="The slack token to use for authentication, pulled from the SLACK_TOKEN environment variable if not set. "
-             "This MUST be a user token and not a bot token due to the permissions needed for conversation history.",
-    )
-    classify_parser.set_defaults(func=classify)
-
-    train_parser = subparsers.add_parser('train', description='Train a model from the classified data file')
-    train_parser.add_argument(
-        "-o", "--output-dir",
-        dest="output_dir",
-        default=DEFAULT_MODEL_DIR,
-        help=f"The output directory for the model, defaults to the value of the "
-        f"SLACK_MODEL_OUTPUT_PATH env var or '{DEFAULT_MODEL_DIR}'",
-    )
-    train_parser.add_argument(
-        "-t", "--test-text",
-        dest="test_text",
-        help="Text to use for a test at the end of training",
-    )
-    train_parser.add_argument(
-        "-p", "--eval-percentage",
-        dest="eval_percentage",
-        type=int,
-        default=80,
-        choices=range(1,99),
-        help="The percentage of data used for evaluation as opposed to training (between 1 and 99), defaults to 80",
-    )
-    train_parser.set_defaults(func=train)
-
-    test_parser = subparsers.add_parser('test', description='Test a trained model\'s output')
-    test_parser.add_argument(
-        "-m", "--model-dir",
-        dest="model_dir",
-        default=DEFAULT_MODEL_DIR,
-        help=f"The directory for the model, defaults to {DEFAULT_MODEL_DIR}",
-    )
-    test_parser.add_argument(
-        "-e", "--expected-label",
-        dest="expected_label",
-        help="The label expected to be generated with the best score from the test",
-    )
-    test_parser.add_argument(
-        "test_text_or_file",
-        help="Text to use for a test, this may be a file which will then be read as tab-separated lines "
-             "with the text first and expected label second",
-    )
-    test_parser.set_defaults(func=test_model)
-
-    args = parser.parse_args()
-    if not hasattr(args, 'func'):
-        parser.print_help()
-        sys.exit(1)
-
-    try:
-        args.func(args)
-    except Exception as e:
-        print(f'ERROR: {e}')
-        sys.exit(1)
-    
-
-
-if __name__ == '__main__':
-    main()
