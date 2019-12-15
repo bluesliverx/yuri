@@ -3,7 +3,7 @@ RUN apk --no-cache add gcc musl-dev g++
 RUN pip install -U pip Cython
 COPY requirements.txt /tmp/
 RUN pip install -r /tmp/requirements.txt
-RUN mkdir -p /app
+RUN mkdir -p /app/oncall_slackbot /app/slacker_blocks
 ENV PYTHONPATH=/app
-ADD oncall_slackbot /app/
-ADD slacker_blocks /app/
+ADD oncall_slackbot /app/oncall_slackbot
+ADD slacker_blocks /app/slacker_blocks
