@@ -49,7 +49,7 @@ export YURI_ROOT_PATH=`pwd`/yuri-data
 ### Classify slack messages
 
 ```
-docker run -v $YURI_ROOT_PATH:/yuri-data -e SLACK_TOKEN bksaville/yuri classify $SLACK_CHANNEL
+docker run -it -v $YURI_ROOT_PATH:/yuri-data -e SLACK_TOKEN bksaville/yuri classify $SLACK_CHANNEL
 ```
 
 This command queries the channel `#my-channel-name` with your user token and

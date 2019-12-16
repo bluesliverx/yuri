@@ -83,6 +83,13 @@ def train_textcat_model(
         output_dir: str = '/tmp/model', labels: Optional[Iterable[str]] = None,
         test_text: Optional[str] = None
 ) -> None:
+    # Load data and verify there is some
+    train_data, eval_data = load_data_func()
+    if not train_data:
+        raise Exception('There is no data provided to train')
+    if not eval_data:
+        raise Exception('There is no data provided to evaluate the trained model')
+
     if not labels:
         raise Exception('No labels were provided to train')
     if not output_dir:
@@ -109,8 +116,6 @@ def train_textcat_model(
     # Add labels to text classifier
     for label in labels:
         textcat.add_label(label)
-
-    train_data, eval_data = load_data_func()
 
     print(
         "Using max {} examples ({} training, {} evaluation)".format(

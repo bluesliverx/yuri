@@ -5,21 +5,15 @@ import os
 import random
 import shutil
 import slacker
-import sys
 import time
 from inquirer.render.console import ConsoleRender
 from inquirer.themes import GreenPassion
 from requests import Session
 from typing import Any, Dict, List, Optional, Set, Tuple
+from . import training
 
 
 parent_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '../'))
-if parent_path not in sys.path:
-    sys.path.append(parent_path)
-
-
-from . import training
-
 
 ROOT_PATH = os.path.join(os.environ.get('YURI_ROOT_PATH', parent_path), 'yuri-data')
 DEFAULT_DATA_FILE = os.path.join(ROOT_PATH, 'slack_channel_data/data.json')
@@ -379,5 +373,5 @@ def classify(args):
         args.direction,
         ignore_user_ids=ignore_user_ids,
         batch_size=args.batch_size,
-        )
+    )
     write_data(data, start_timestamp, end_timestamp, args.data_file)
