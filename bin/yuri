@@ -112,9 +112,16 @@ def main():
         help="The label expected to be generated with the best score from the test",
     )
     test_parser.add_argument(
+        "-f", "--file",
+        dest="is_file",
+        action="store_true",
+        help="If set, force interpreting the argument as a file, and fail if it does not exist",
+    )
+    test_parser.add_argument(
         "test_text_or_file",
-        help="Text to use for a test, this may be a file which will then be read as tab-separated lines "
-             "with the text first and expected label second",
+        help="Text to use for a test, if the '--file' flag is used, "
+             "this may be a file which will then be read as tab-separated lines "
+             "where each line has the text to test and the expected label",
     )
     test_parser.set_defaults(func=yuri.test_model)
 

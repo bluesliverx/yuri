@@ -290,11 +290,13 @@ def test_model(args):
         raise Exception('The model dir was not specified, please try again')
     if not args.test_text_or_file:
         raise Exception('Text to test must be provided')
+    if args.is_file and not os.path.exists(args.test_text_or_file):
+        raise Exception(f'The file "{args.test_text_or_file}" does not exist, please check file name')
 
     print(f'Loading model from {args.model_dir}')
 
     has_failures = False
-    if os.path.exists(args.test_text_or_file):
+    if args.is_file:
         print(f'Reading {args.test_text_or_file} as a tab-separated file')
         with open(args.test_text_or_file, 'r') as fobj:
             file_contents = fobj.read()

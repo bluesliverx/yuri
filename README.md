@@ -83,7 +83,9 @@ docker run -v $YURI_ROOT_PATH:/yuri-data bksaville/yuri test "<my-test-text>"
 # Asserts that the expected label matches the label with the best score
 docker run -v $YURI_ROOT_PATH:/yuri-data bksaville/yuri test "<my-test-text>" -e "<expected-label>"
 # Asserts that the label given for the text and expected label in the file match (tab-separated)
-docker run -v $YURI_ROOT_PATH:/yuri-data bksaville/yuri test <my-test-file.tsv>
+# Make sure that any files to test are mounted to a directory in the container
+#   here the current directory is mounted to /source and the file is loaded from there in the container
+docker run -v $YURI_ROOT_PATH:/yuri-data -v `pwd`:/source bksaville/yuri test -f /source/<my-test-file.tsv>
 ```
 
 Testing the model is easy since it just involves passing test on the command line or a file
