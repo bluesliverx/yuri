@@ -15,7 +15,8 @@ from . import training
 
 parent_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '../'))
 
-ROOT_PATH = os.path.join(os.environ.get('YURI_ROOT_PATH', parent_path), 'yuri-data')
+# Use the env var path or ../yuri-data
+ROOT_PATH = os.environ.get('YURI_ROOT_PATH', os.path.join(parent_path, 'yuri-data'))
 DEFAULT_DATA_FILE = os.path.join(ROOT_PATH, 'slack_channel_data/data.json')
 DEFAULT_MODEL_DIR = os.path.join(ROOT_PATH, 'slack_channel_model')
 DEFAULT_BATCH_SIZE = 10
