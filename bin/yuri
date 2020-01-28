@@ -18,7 +18,7 @@ def main():
     parser.add_argument(
         "-d", "--data-file",
         dest="data_file",
-        default=yuri.DEFAULT_DATA_FILE,
+        default=os.environ.get('SLACK_MODEL_DATA_PATH') or yuri.DEFAULT_DATA_FILE,
         help=f"The data file to use for storage, defaults to the value of the "
              f"SLACK_MODEL_DATA_PATH env var or '{yuri.DEFAULT_DATA_FILE}'",
     )
@@ -80,7 +80,7 @@ def main():
     train_parser.add_argument(
         "-o", "--output-dir",
         dest="output_dir",
-        default=yuri.DEFAULT_MODEL_DIR,
+        default=os.environ.get('SLACK_MODEL_OUTPUT_PATH') or yuri.DEFAULT_MODEL_DIR,
         help=f"The output directory for the model, defaults to the value of the "
         f"SLACK_MODEL_OUTPUT_PATH env var or '{yuri.DEFAULT_MODEL_DIR}'",
     )
