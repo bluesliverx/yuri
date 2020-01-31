@@ -25,6 +25,33 @@ def main():
 
     subparsers = parser.add_subparsers(title='command')
 
+    classify_single_parser = subparsers.add_parser(
+        'classify-text',
+        description='Classify a single line of text. After the selection is made, the application exits immediately.'
+    )
+    classify_single_parser.add_argument(
+        "text",
+        help="A string of text to classify",
+    )
+    classify_single_parser.add_argument(
+        "-l", "--label",
+        dest="label",
+        help="A label to apply for the provided text, this is ignored if the text is not set",
+    )
+    classify_single_parser.add_argument(
+        "-y", "--yes",
+        dest="yes",
+        action="store_true",
+        help="If a label is set, does not prompt for confirmation",
+    )
+    classify_single_parser  .add_argument(
+        "-o", "--no-overwrite",
+        action="store_false",
+        dest="append",
+        help="If set, does not append data to the data file and errors out if the file already exists",
+    )
+    classify_single_parser.set_defaults(func=yuri.classify_single)
+
     classify_parser = subparsers.add_parser('classify', description='Classify messages from slack')
     classify_parser.add_argument(
         "slack_channel",

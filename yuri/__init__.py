@@ -354,7 +354,34 @@ def train(args):
     training.train_textcat_model(
         load_data_func=data_func, output_dir=args.output_dir, labels=labels, test_text=args.test_text
     )
-    
+
+
+def classify_single(args):
+    print(f'Classifying text: {args.text}')
+    message_id = f'{str(time.time())}-manual-text'
+    classification = {
+        'text': args.text,
+        'label': None,
+    }
+    data, start_timestamp, end_timestamp = load_data(args.data_file, args.append)
+    if args.label:
+        if args.label == CREATE_LABEL:
+            raise Exception(f"The label '{args.label}' is reserved and may not be used")
+        if not args.yes:
+            # Confirm that the label should be applied
+            existing_labels = {args.label} if args.label != IGNORE_LABEL else set()
+            classification['label'] = get_label(existing_labels)
+        else:
+            classification['label'] = args.label
+    else:
+        # Prompt the user for a label
+        all_labels = get_data_labels(data)
+        classification['label'] = get_label(all_labels)
+
+    # Set the data and write it out
+    data[message_id] = classification
+    write_data(data, start_timestamp, end_timestamp, args.data_file)
+
 
 def classify(args):
     # Parse ignore user ids from comma-separated list

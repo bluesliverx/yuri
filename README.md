@@ -63,6 +63,17 @@ NOTE: Try to make sure to have 10s (or better, 100s) of messages for each
 category in order to train your model correctly. During testing, it is
 sufficient to have only a few messages for each category.
 
+### Classify lines of text manually
+
+```
+# The label and auto-accept flag are optional
+docker run -it -v $YURI_ROOT_PATH:/yuri-data bksaville/yuri classify-text "this is a line of text" -l my-label -y
+```
+
+This command classifies a single text string without querying slack or changing
+start and end timestamps stored in the data file. This is helpful when a single
+message needs classification to aid in training.
+
 ### Train the model
 
 ```
