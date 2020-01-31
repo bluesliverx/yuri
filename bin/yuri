@@ -18,9 +18,10 @@ def main():
     parser.add_argument(
         "-d", "--data-file",
         dest="data_file",
-        default=os.environ.get('SLACK_MODEL_DATA_PATH') or yuri.DEFAULT_DATA_FILE,
-        help=f"The data file to use for storage, defaults to the value of the "
-             f"SLACK_MODEL_DATA_PATH env var or '{yuri.DEFAULT_DATA_FILE}'",
+        default=yuri.DEFAULT_DATA_FILE if 'YURI_ROOT_PATH' in os.environ else
+            os.environ.get('SLACK_MODEL_DATA_PATH') or yuri.DEFAULT_DATA_FILE,
+        help=f"The data file to use for storage, defaults to {yuri.DEFAULT_DATA_FILE} "
+             f"if the YURI_ROOT_PATH env var is defined or the value of the SLACK_MODEL_DATA_PATH env var",
     )
 
     subparsers = parser.add_subparsers(title='command')
@@ -107,9 +108,10 @@ def main():
     train_parser.add_argument(
         "-o", "--output-dir",
         dest="output_dir",
-        default=os.environ.get('SLACK_MODEL_OUTPUT_PATH') or yuri.DEFAULT_MODEL_DIR,
-        help=f"The output directory for the model, defaults to the value of the "
-        f"SLACK_MODEL_OUTPUT_PATH env var or '{yuri.DEFAULT_MODEL_DIR}'",
+        default=yuri.DEFAULT_MODEL_DIR if 'YURI_ROOT_PATH' in os.environ else
+            os.environ.get('SLACK_MODEL_OUTPUT_PATH') or yuri.DEFAULT_MODEL_DIR,
+        help=f"The output directory for the model, defaults to {yuri.DEFAULT_MODEL_DIR} "
+             f"if the YURI_ROOT_PATH env var is defined or the value of the SLACK_MODEL_OUTPUT_PATH env var",
     )
     train_parser.add_argument(
         "-t", "--test-text",
