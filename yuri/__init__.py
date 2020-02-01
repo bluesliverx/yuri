@@ -301,6 +301,9 @@ def test_model(args):
         with open(args.test_text_or_file, 'r') as fobj:
             file_contents = fobj.read()
         for i, line in enumerate(file_contents.splitlines()):
+            # Ignore commented lines
+            if line.strip().startswith('#'):
+                continue
             elems = line.split('\t')
             if len(elems) != 2:
                 raise Exception(
